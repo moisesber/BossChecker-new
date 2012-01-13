@@ -7,10 +7,10 @@ import java.io.InputStreamReader;
 import java.net.MalformedURLException;
 import java.net.URL;
 import java.util.ArrayList;
+import java.util.Calendar;
 import java.util.Date;
 import java.util.List;
 import java.util.StringTokenizer;
-import java.util.TimerTask;
 
 import org.apache.http.HttpResponse;
 import org.apache.http.client.HttpClient;
@@ -19,18 +19,24 @@ import org.apache.http.impl.client.DefaultHttpClient;
 import org.apache.http.protocol.BasicHttpContext;
 import org.apache.http.protocol.HttpContext;
 
+import android.os.Handler;
+import android.os.SystemClock;
 import android.util.Log;
 import boss.checker.checker.bossInfo.BossStatus;
-import boss.checker.properties.BossCheckerProperties;
 
 //public class BossCheckerTimerTask extends TimerTask {
-public class BossCheckerTimerTask {
+public class BossCheckerTimerTask implements Runnable {
 
 	private final BossChecker parent;
 	private boolean aBossIsAlive;
+	private final Handler mHandler;
+    private final long startTime;
 
-	public BossCheckerTimerTask(BossChecker parent){
+
+	public BossCheckerTimerTask(BossChecker parent, Handler mHandler){
 		this.parent = parent;
+		this.mHandler = mHandler;
+		this.startTime = System.currentTimeMillis();
 	}
 	
 	public List<BossStatus> getAlts(String string) throws IOException{
@@ -62,7 +68,8 @@ public class BossCheckerTimerTask {
 					updateDate = true;
 //					BossFileWriter.writeBossStatus(boss, new Date());
 				}
-				
+	             Log.d("Boss", "New BossStatus added = "+boss+" status = "+status);
+
 				alts.add(new BossStatus(boss,status, this.getDate(updateDate,boss)));
 			}
 		}
@@ -70,8 +77,8 @@ public class BossCheckerTimerTask {
 		return alts;
 	}
 	
-	private Date getDate(boolean updateDate, String boss) {
-		return updateDate ? new Date() : this.parent.getBossLastBossStatus(boss) != null ? this.parent.getBossLastBossStatus(boss).getLastAlive() : null;
+	private String getDate(boolean updateDate, String boss) {
+		return updateDate ? new Date().toString() : this.parent.getBossLastBossStatus(boss) != null ? this.parent.getBossLastBossStatus(boss).getLastAlive() : null;
 	}
 
 	public boolean checkMorto(String s){
@@ -99,6 +106,9 @@ public class BossCheckerTimerTask {
 			// ------------------------------------------------------------//
 //			String link = BossCheckerProperties.getInstance().getPropertie(BossCheckerProperties.SITE_URL);
 			String link = "http://anonymouse.org/cgi-bin/anon-www.cgi/http://www.l2ouro.com/pt-br/lineage2/pvp/spawnboss/";
+			
+//			String link = "http://150.161.192.10/moises/tests/index.html";
+			
 			u = new URL(link);
 			
 			HttpClient httpClient = new DefaultHttpClient();
@@ -160,11 +170,6 @@ public class BossCheckerTimerTask {
 			}
 
 			List<BossStatus> alts = getAlts(morto);
-			StringBuffer buffer = new StringBuffer();
-			for (BossStatus bossStatus : alts) {
-//				System.out.println(bossStatus);
-				buffer.append(bossStatus);
-			}
 			return alts;
 		} catch (MalformedURLException mue) {
 
@@ -223,6 +228,9 @@ public class BossCheckerTimerTask {
 //			System.out.println("Nenhuma modificacao nem boss vivo :/");
 		
 		this.parent.setLastResult(result);
+		
+		
+	    rescheduleTimer();
 	}
 
 	private void modifiedResultDetected(List<BossStatus> result) {
@@ -235,6 +243,16 @@ public class BossCheckerTimerTask {
 			// TODO Auto-generated catch block
 			e.printStackTrace();
 		}
+	    rescheduleTimer();
+
+	}
+
+	private void rescheduleTimer() {
+//		Log.d("Boss", "Rescheduling time to "+(System.currentTimeMillis() + ((10 * 1000))));
+		
+        mHandler.postDelayed(this, (10 * 1000));
+
+//		mHandler.postAtTime(this, System.currentTimeMillis() + ((10 * 1000)));
 	}
 
 	private boolean someBossIsAlive(List<BossStatus> result) {

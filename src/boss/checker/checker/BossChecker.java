@@ -20,6 +20,7 @@ import android.app.Service;
 import android.content.Intent;
 import android.os.Binder;
 import android.os.Bundle;
+import android.os.Handler;
 import android.os.IBinder;
 import android.util.Log;
 import boss.checker.checker.bossInfo.BossStatus;
@@ -38,6 +39,8 @@ public class BossChecker extends Service {
 	private int counter;
 	private Timer timer;
 	private boolean firstTime;
+    private Handler mHandler;
+	private BossCheckerTimerTask bossCheckerTimerTask;
 	
 	@Override
 	public void onCreate() {
@@ -45,7 +48,14 @@ public class BossChecker extends Service {
 		Log.d("Boss", "BossChecker Service created...");
 		this.firstTime = true;
 
-		this.startTimer();
+//		this.startTimer();
+		
+		
+        mHandler = new Handler();
+        bossCheckerTimerTask = new BossCheckerTimerTask(this,mHandler);
+        
+        mHandler.removeCallbacks(bossCheckerTimerTask);
+        mHandler.postDelayed(bossCheckerTimerTask, 0);
 	}
 	
 	@Override
@@ -126,20 +136,16 @@ public class BossChecker extends Service {
 		return this.lastResult;
 	}
 
-	public void startTimer() {
-		new BossCheckerTimerTask(this).run();
-
+//	public void startTimer() {
+//		new BossCheckerTimerTask(this).run();
+//
 //		timer = new Timer();
 //		int delay = Integer.parseInt(BossCheckerProperties.getInstance()
 ////				.getPropertie(BossCheckerProperties.CHECKER_DELAY_STRING)) * 1000 * 60;
 //				.getPropertie(BossCheckerProperties.CHECKER_DELAY_STRING)) * 1000 * 2;
 //		timer.scheduleAtFixedRate(new BossCheckerTimerTask(this),0, delay);
-	}
+//	}
 	
-	public static void main(String[] args){
-		
-	}
-
 	
 	public void incCounter(){
 		counter++;
@@ -164,6 +170,7 @@ public class BossChecker extends Service {
 
 	public void windowClosed() {
 		timer.cancel();
+		mHandler.removeCallbacks(bossCheckerTimerTask);
 	}
 
 	// URL url = new
@@ -209,17 +216,21 @@ public class BossChecker extends Service {
 		for (String bossName : keys) {
 			boolean isAlive = Boolean.parseBoolean(lastResult.getString(bossName));
 			
-			Date lastAlive = null;
+			String lastAlive = null;
 			if(lastResult.containsKey(bossName+LAST_ALIVE_SUFIX)){
 				String lastResultAlive = lastResult.getString(bossName+LAST_ALIVE_SUFIX);
-				if(lastResultAlive != null && !lastResultAlive.equals("null")){
-					lastAlive = new Date(lastResultAlive);	
-				} else { 
-					lastAlive = null;
-				}
+				Log.d("Boss", "Last alive received for "+bossName+" was "+lastResultAlive);
+
+//				if(lastResultAlive != null && !lastResultAlive.equals("null")){
+//					lastAlive = new Date(lastResultAlive);	
+//				} else { 
+//					lastAlive = null;
+//				}
 			}
-			
-			list.add(new BossStatus(bossName, isAlive, lastAlive));
+
+			if(!bossName.contains(LAST_ALIVE_SUFIX)) {
+				list.add(new BossStatus(bossName, isAlive, lastAlive));
+			}
 		}
 		
 		return list;

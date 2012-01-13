@@ -4,7 +4,7 @@ import java.util.Date;
 
 public class BossStatus {
 
-	public BossStatus(String boss, boolean status, Date lastAlive) {
+	public BossStatus(String boss, boolean status, String lastAlive) {
 		this.boss = boss;
 		this.alive = status;
 		this.lastAlive = lastAlive;
@@ -12,7 +12,7 @@ public class BossStatus {
 
 	private String boss;
 	private boolean alive;
-	private Date lastAlive;
+	private String lastAlive;
 
 	public String toString() {
 		return "O boss " + boss + " esta " + this.statusToString();
@@ -49,11 +49,11 @@ public class BossStatus {
 				this.lastAlive != null ? this.lastAlive.toString() : "null" };
 	}
 
-	public Date getLastAlive() {
+	public String getLastAlive() {
 		return lastAlive;
 	}
 	
-	public void setLastAlive(Date lastAlive){
+	public void setLastAlive(String lastAlive){
 		this.lastAlive = lastAlive;
 	}
 

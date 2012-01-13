@@ -12,6 +12,7 @@ import android.content.Context;
 import android.content.Intent;
 import android.content.IntentFilter;
 import android.os.Bundle;
+import android.os.Handler;
 import android.util.Log;
 import android.widget.EditText;
 import android.widget.HorizontalScrollView;
@@ -36,13 +37,14 @@ public class BossCheckerActivity extends Activity {
 		
 		return lastResult;
 	}
-	
+
 	
     /** Called when the activity is first created. */
     @Override
     public void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
         dataUpdateReceiver = new BossStatusReceiver(this);
+//
         
         int SECS = 1000;
         int MINS = 60 * SECS;
@@ -121,7 +123,7 @@ public class BossCheckerActivity extends Activity {
 		         
 		         int index = 0;
 		         for (BossStatus bossStatus : bossStatuses) {
-		             Log.d("Boss", "Status line...");
+		             Log.d("Boss", "Status line... "+bossStatus.getBoss());
 
 		             LinearLayout ll = new LinearLayout(activity);
 		             vll.addView(ll);
@@ -138,7 +140,7 @@ public class BossCheckerActivity extends Activity {
 
 		             HorizontalScrollView hsv = new HorizontalScrollView(activity);
 		             tv = new EditText(activity);
-		             Date lastAlive = bossStatus.getLastAlive();
+		             String lastAlive = bossStatus.getLastAlive();
 		             tv.setText(lastAlive != null? lastAlive.toString() : "null");
 
 //		             tv.setText(lastAlive.toString());
@@ -168,16 +170,16 @@ public class BossCheckerActivity extends Activity {
     }
     @Override
     public void onPause(){
+    	super.onPause();
     	if (dataUpdateReceiver != null) unregisterReceiver(dataUpdateReceiver);
     }
     
-//    
-//    @Override
-//    public void onStop(){
-//    	super.onStop();
-//    	
-//    	mService.stopSelf();
-//    }
+    @Override
+    public void onStop(){
+    	super.onStop();
+    	
+//    	if (dataUpdateReceiver != null) unregisterReceiver(dataUpdateReceiver);
+    }
 //    
 //    /** Defines callbacks for service binding, passed to bindService() */
 //    private ServiceConnection mConnection = new ServiceConnection() {
