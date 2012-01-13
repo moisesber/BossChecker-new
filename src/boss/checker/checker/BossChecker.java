@@ -11,18 +11,23 @@ package boss.checker.checker;
 //------------------------------------------------------------//
 
 import java.util.ArrayList;
-import java.util.Date;
 import java.util.List;
 import java.util.Set;
 import java.util.Timer;
 
+import android.R;
+import android.app.Notification;
+import android.app.NotificationManager;
+import android.app.PendingIntent;
 import android.app.Service;
+import android.content.Context;
 import android.content.Intent;
 import android.os.Binder;
 import android.os.Bundle;
 import android.os.Handler;
 import android.os.IBinder;
 import android.util.Log;
+import boss.checker.BossCheckerActivity;
 import boss.checker.checker.bossInfo.BossStatus;
 
 public class BossChecker extends Service {
@@ -78,7 +83,37 @@ public class BossChecker extends Service {
 		if(aBossIsAlive){
 			Log.d("Boss", "A boss is alive, should notify...");
 			sendBroadcast(new Intent(new BossAlive()));
+			
+			BossStatus aliveStatus = null;
+			for (BossStatus bossStatus : result) {
+				if(bossStatus.isAlive()){ 
+					aliveStatus = bossStatus;
+				}
+			}
+			
 			//send notification alert!
+			
+			
+			String ns = Context.NOTIFICATION_SERVICE;
+			NotificationManager mNotificationManager = (NotificationManager) getSystemService(ns);
+			
+			int icon = R.drawable.ic_dialog_alert;
+			CharSequence tickerText = "A boss is alive!";
+			long when = System.currentTimeMillis();
+
+			Notification notification = new Notification(icon, tickerText, when);
+			
+			Context context = getApplicationContext();
+			CharSequence contentTitle = "The boss "+(aliveStatus != null ? aliveStatus.getBoss() : null)+ " is alive!";
+			CharSequence contentText = "Boss Alive!";
+			Intent notificationIntent = new Intent(this, BossCheckerActivity.class);
+			PendingIntent contentIntent = PendingIntent.getActivity(this, 0, notificationIntent, 0);
+
+			notification.setLatestEventInfo(context, contentTitle, contentText, contentIntent);
+			
+			int HELLO_ID = 1;
+
+			mNotificationManager.notify(HELLO_ID, notification);
 		}
 		
 	}
